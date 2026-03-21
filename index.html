@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maison Éclat — Birthday Atelier</title>
+
+<!-- Google Fonts: luxury pairing -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Great+Vibes&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet" />
+
+<!-- html2canvas for image capture -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+  /* ─────────────────────────────────────────
+     RESET & BASE
+  ───────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold:        #c9a84c;
+    --gold-light:  #e8d5a3;
+    --gold-dim:    #7a6230;
+    --black:       #050505;
+    --deep:        #0d0d0d;
+    --surface:     #111111;
+    --text:        #e8e0d5;
+    --muted:       #7a7060;
+    --font-serif:  'Cormorant Garamond', Georgia, serif;
+    --font-script: 'Great Vibes', cursive;
+    --font-sans:   'Montserrat', sans-serif;
+    --ease-lux:    cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--black);
+    color: var(--text);
+    font-family: var(--font-serif);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ─────────────────────────────────────────
+     BACKGROUND VIDEO LAYER
+  ───────────────────────────────────────── */
+  #bg-video-wrap {
+    position: fixed; inset: 0; z-index: 0;
+    overflow: hidden;
+  }
+
+  #bg-video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scale(1.04);   /* avoids letterbox edges */
+    filter: saturate(0.7) brightness(0.55);
+    will-change: transform;
+  }
+
+  /* layered overlays for depth */
+  #bg-video-wrap::before {
+    content: '';
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(
+      135deg,
+      rgba(5,5,5,0.72) 0%,
+      rgba(10,8,4,0.55) 50%,
+      rgba(5,5,5,0.72) 100%
+    );
+  }
+  #bg-video-wrap::after {
+    content: '';
+    position: absolute; inset: 0; z-index: 2;
+    background: radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(0,0,0,0.65) 100%);
+  }
+
+  /* ─────────────────────────────────────────
+     PAGES
+  ───────────────────────────────────────── */
+  .page {
+    position: relative; z-index: 10;
+    min-height: 100dvh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 3rem 1.5rem;
+    opacity: 0;
+    transition: opacity 0.9s var(--ease-lux), transform 0.9s var(--ease-lux);
+    pointer-events: none;
+  }
+  .page.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .page.exit {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  /* ─────────────────────────────────────────
+     MONOGRAM / LOGO
+  ───────────────────────────────────────── */
+  .logo-mark {
+    font-family: var(--font-script);
+    font-size: clamp(2.8rem, 6vw, 4.2rem);
+    color: var(--gold);
+    letter-spacing: 0.03em;
+    text-shadow: 0 0 40px rgba(201,168,76,0.35);
+    margin-bottom: 0.25rem;
+    line-height: 1;
+  }
+
+  .logo-rule {
+    width: 60px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 0.6rem auto 1.4rem;
+  }
+
+  /* ─────────────────────────────────────────
+     LANDING — TYPOGRAPHY
+  ───────────────────────────────────────── */
+  #page-landing { gap: 0; }
+
+  .atelier-label {
+    font-family: var(--font-sans);
+    font-size: clamp(0.52rem, 1.2vw, 0.68rem);
+    font-weight: 300;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.85;
+    margin-bottom: 0.9rem;
+  }
+
+  .main-title {
+    font-size: clamp(1.9rem, 5vw, 3.4rem);
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    text-align: center;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .main-title em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+
+  .subtitle {
+    margin-top: 1rem;
+    font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+
+  /* ─────────────────────────────────────────
+     FORM
+  ───────────────────────────────────────── */
+  .form-wrap {
+    margin-top: 2.8rem;
+    width: 100%;
+    max-width: 480px;
+    display: flex; flex-direction: column; gap: 1.3rem;
+  }
+
+  .field {
+    position: relative;
+  }
+
+  .field label {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.6rem;
+    font-weight: 300;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 0.5rem;
+    padding-left: 2px;
+  }
+
+  .field input,
+  .field textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: none;
+    border-bottom: 1px solid rgba(201,168,76,0.25);
+    padding: 0.7rem 0.2rem;
+    font-family: var(--font-serif);
+    font-size: clamp(0.95rem, 2vw, 1.05rem);
+    font-weight: 300;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    resize: none;
+    caret-color: var(--gold);
+  }
+  .field input::placeholder,
+  .field textarea::placeholder { color: rgba(232,224,213,0.22); }
+
+  .field input:focus,
+  .field textarea:focus {
+    border-bottom-color: var(--gold);
+    box-shadow: 0 2px 16px -4px rgba(201,168,76,0.18);
+  }
+
+  .field textarea { min-height: 80px; }
+
+  /* line accent on focus */
+  .field::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0;
+    width: 0; height: 1px;
+    background: var(--gold);
+    transition: width 0.5s var(--ease-lux);
+  }
+  .field:focus-within::after { width: 100%; }
+
+  /* ─────────────────────────────────────────
+     BUTTONS
+  ───────────────────────────────────────── */
+  .btn-primary {
+    margin-top: 0.8rem;
+    padding: 1rem 2.8rem;
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--black);
+    background: linear-gradient(135deg, #c9a84c 0%, #e8d5a3 50%, #c9a84c 100%);
+    background-size: 200% 100%;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: background-position 0.6s ease, box-shadow 0.5s ease, transform 0.3s ease;
+    align-self: center;
+  }
+  .btn-primary:hover {
+    background-position: 100% 0;
+    box-shadow: 0 4px 32px rgba(201,168,76,0.28), 0 0 60px rgba(201,168,76,0.08);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ripple */
+  .btn-primary::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .btn-primary:active::after { opacity: 1; }
+
+  .btn-secondary {
+    padding: 0.85rem 2.2rem;
+    font-family: var(--font-sans);
+    font-size: 0.62rem;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.35);
+    cursor: pointer;
+    transition: border-color 0.4s, color 0.4s, box-shadow 0.4s, transform 0.3s ease;
+  }
+  .btn-secondary:hover {
+    border-color: var(--gold);
+    box-shadow: inset 0 0 20px rgba(201,168,76,0.06), 0 0 20px rgba(201,168,76,0.1);
+    transform: translateY(-1px);
+  }
+
+  /* ─────────────────────────────────────────
+     REVEAL PAGE WRAPPER
+  ───────────────────────────────────────── */
+  #page-reveal {
+    padding: 4rem 1.5rem;
+    gap: 2.5rem;
+  }
+
+  /* ─────────────────────────────────────────
+     CERTIFICATE — HARD COVER LUXURY CARD
+  ───────────────────────────────────────── */
+  .cert-outer {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    /* 3-D depth stack */
+    box-shadow:
+      0 2px 0 1px #7a6230,
+      0 4px 0 2px #5a4820,
+      0 6px 0 3px #3a2e10,
+      0 10px 40px -4px rgba(0,0,0,0.9),
+      0 30px 80px -10px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(201,168,76,0.08);
+    transform: perspective(900px) rotateX(1.5deg);
+    transition: transform 0.8s var(--ease-lux), box-shadow 0.8s var(--ease-lux);
+  }
+  .cert-outer:hover {
+    transform: perspective(900px) rotateX(0deg) translateY(-4px);
+    box-shadow:
+      0 2px 0 1px #7a6230,
+      0 4px 0 2px #5a4820,
+      0 6px 0 3px #3a2e10,
+      0 16px 60px -4px rgba(0,0,0,0.95),
+      0 40px 100px -10px rgba(0,0,0,0.75),
+      0 0 0 1px rgba(201,168,76,0.15);
+  }
+
+  #cert-card {
+    position: relative;
+    background:
+      linear-gradient(160deg, #1a1408 0%, #0d0d0d 40%, #141008 70%, #1a1408 100%);
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: clamp(2.2rem, 6vw, 4rem) clamp(1.8rem, 5vw, 3.5rem);
+    overflow: hidden;
+    text-align: center;
+  }
+
+  /* sheen / light sweep */
+  #cert-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 30%,
+      rgba(201,168,76,0.05) 50%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  /* corner ornaments */
+  .cert-corner {
+    position: absolute;
+    width: 38px; height: 38px;
+    opacity: 0.5;
+  }
+  .cert-corner svg { width: 100%; height: 100%; }
+  .cert-corner.tl { top: 14px; left: 14px; }
+  .cert-corner.tr { top: 14px; right: 14px; transform: scaleX(-1); }
+  .cert-corner.bl { bottom: 14px; left: 14px; transform: scaleY(-1); }
+  .cert-corner.br { bottom: 14px; right: 14px; transform: scale(-1); }
+
+  /* inner border frame */
+  .cert-frame {
+    position: absolute; inset: 24px;
+    border: 1px solid rgba(201,168,76,0.12);
+    pointer-events: none;
+  }
+
+  /* certificate header */
+  .cert-header-label {
+    font-family: var(--font-sans);
+    font-size: clamp(0.48rem, 1.1vw, 0.6rem);
+    font-weight: 300;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.7;
+    margin-bottom: 0.4rem;
+  }
+
+  .cert-divider {
+    display: flex; align-items: center; gap: 0.8rem;
+    margin: 0.5rem auto 1.1rem;
+    max-width: 240px;
+  }
+  .cert-divider span {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+  }
+  .cert-divider-diamond {
+    width: 5px; height: 5px;
+    background: var(--gold);
+    transform: rotate(45deg);
+    opacity: 0.7;
+  }
+
+  .cert-presented-to {
+    font-family: var(--font-serif);
+    font-size: clamp(0.72rem, 1.5vw, 0.85rem);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+  }
+
+  .cert-name {
+    font-family: var(--font-script);
+    font-size: clamp(2.2rem, 7vw, 3.8rem);
+    color: var(--gold-light);
+    text-shadow:
+      0 0 40px rgba(201,168,76,0.3),
+      0 2px 12px rgba(0,0,0,0.8);
+    line-height: 1.15;
+    margin-bottom: 0.3rem;
+  }
+
+  .cert-tagline {
+    font-family: var(--font-serif);
+    font-size: clamp(0.78rem, 1.6vw, 0.92rem);
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(232,224,213,0.45);
+    letter-spacing: 0.04em;
+    margin: 0.4rem 0 1.4rem;
+    line-height: 1.6;
+  }
+
+  .cert-message-wrap {
+    position: relative;
+    margin: 0 auto 1.5rem;
+    max-width: 82%;
+    padding: 1.1rem 1.4rem;
+    background: rgba(201,168,76,0.04);
+    border-left: 2px solid rgba(201,168,76,0.3);
+  }
+  .cert-quote-mark {
+    position: absolute;
+    top: -0.5rem; left: 0.8rem;
+    font-family: var(--font-serif);
+    font-size: 3rem;
+    color: rgba(201,168,76,0.25);
+    line-height: 1;
+  }
+  .cert-message {
+    font-family: var(--font-serif);
+    font-size: clamp(0.88rem, 1.8vw, 1rem);
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(232,224,213,0.75);
+    line-height: 1.75;
+    letter-spacing: 0.02em;
+  }
+
+  .cert-signed-label {
+    font-family: var(--font-sans);
+    font-size: clamp(0.48rem, 1vw, 0.58rem);
+    font-weight: 300;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .cert-signature {
+    font-family: var(--font-script);
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(201,168,76,0.2);
+    line-height: 1.2;
+    margin-bottom: 0.3rem;
+  }
+
+  /* ─── Seal ─── */
+  .cert-seal {
+    display: inline-flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    width: clamp(68px, 12vw, 86px);
+    height: clamp(68px, 12vw, 86px);
+    border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.45);
+    box-shadow:
+      0 0 0 3px rgba(201,168,76,0.08),
+      0 0 18px rgba(201,168,76,0.15),
+      inset 0 0 12px rgba(201,168,76,0.06);
+    margin-top: 1.4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .cert-seal::before {
+    content: '';
+    position: absolute; inset: 5px;
+    border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+  .cert-seal-inner {
+    font-family: var(--font-script);
+    font-size: clamp(0.7rem, 2vw, 0.95rem);
+    color: var(--gold);
+    opacity: 0.8;
+    z-index: 1;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .cert-seal-year {
+    font-family: var(--font-sans);
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    z-index: 1;
+    margin-top: 2px;
+  }
+
+  /* house name watermark */
+  .cert-watermark {
+    margin-top: 1.6rem;
+    font-family: var(--font-sans);
+    font-size: 0.5rem;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: rgba(201,168,76,0.2);
+  }
+
+  /* ─────────────────────────────────────────
+     ACTION BUTTONS ROW
+  ───────────────────────────────────────── */
+  .reveal-actions {
+    display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+  }
+
+  /* ─────────────────────────────────────────
+     SHARE TOAST
+  ───────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 2rem; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.35);
+    color: var(--gold-light);
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.7rem 1.6rem;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s var(--ease-lux);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ─────────────────────────────────────────
+     PARTICLE SHIMMER (CSS only, pure ambient)
+  ───────────────────────────────────────── */
+  .shimmer-particle {
+    position: fixed; border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.6), transparent 60%);
+    pointer-events: none; z-index: 5;
+    animation: floatUp linear infinite;
+    opacity: 0;
+  }
+
+  @keyframes floatUp {
+    0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+    15%  { opacity: 0.4; }
+    85%  { opacity: 0.15; }
+    100% { opacity: 0; transform: translateY(-60vh) scale(1.5); }
+  }
+
+  /* ─────────────────────────────────────────
+     LOADING OVERLAY
+  ───────────────────────────────────────── */
+  #loading-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--black);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 1.2rem;
+    opacity: 1;
+    transition: opacity 0.9s ease;
+  }
+  #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+  .loader-logo {
+    font-family: var(--font-script);
+    font-size: 3rem;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(201,168,76,0.4);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .loader-line {
+    width: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    animation: expandLine 1.8s var(--ease-lux) forwards;
+    animation-delay: 0.3s;
+  }
+  @keyframes expandLine {
+    to { width: 120px; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; text-shadow: 0 0 50px rgba(201,168,76,0.6); }
+  }
+
+  /* ─────────────────────────────────────────
+     MOBILE REFINEMENTS
+  ───────────────────────────────────────── */
+  @media (max-width: 600px) {
+    .cert-outer { transform: none; }
+    .cert-outer:hover { transform: none; }
+    .cert-message-wrap { max-width: 100%; }
+    .btn-primary, .btn-secondary { width: 100%; text-align: center; }
+    .reveal-actions { flex-direction: column; align-items: stretch; }
+    .reveal-actions .btn-primary,
+    .reveal-actions .btn-secondary { align-self: stretch; }
+  }
+
+  /* scroll for tall cert on small screens */
+  @media (max-height: 700px) {
+    #page-reveal { padding-top: 2rem; padding-bottom: 2rem; }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ── LOADING OVERLAY ─────────────────────────────────── -->
+<div id="loading-overlay">
+  <div class="loader-logo">Maison Éclat</div>
+  <div class="loader-line"></div>
+</div>
+
+<!-- ── BACKGROUND VIDEO ───────────────────────────────── -->
+<div id="bg-video-wrap">
+  <!--
+    RECOMMENDED VIDEO:
+    Search for any of these on Pexels, Pixabay, or Coverr (free):
+    • "silk fabric slow motion" — soft champagne / ivory tones
+    • "luxury fashion bokeh" — golden light particles
+    • "champagne pour slow motion"
+    • "gold dust particles"
+    Replace the src below. MP4 format, 1080p, looped.
+    For best performance: encode at ≤4 Mbps, 30fps.
+  -->
+  <video id="bg-video"
+    autoplay muted loop playsinline
+    preload="none"
+    poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3C/svg%3E">
+    <!--
+      <source src="your-luxury-video.mp4" type="video/mp4" />
+    -->
+  </video>
+</div>
+
+<!-- ── SHIMMER PARTICLES ──────────────────────────────── -->
+<div id="particles"></div>
+
+<!-- ── TOAST ──────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 1 — LANDING
+═══════════════════════════════════════════════════════ -->
+<section id="page-landing" class="page">
+  <div class="atelier-label" id="lbl-atelier">Birthday Atelier</div>
+  <div class="logo-mark">Maison Éclat</div>
+  <div class="logo-rule"></div>
+
+  <h1 class="main-title" id="main-title">
+    <em id="title-em">Birthday</em> Atelier
+  </h1>
+
+  <p class="subtitle" id="subtitle">Craft a timeless birthday experience</p>
+
+  <form class="form-wrap" id="form" novalidate>
+    <div class="field">
+      <label id="lbl-celebrant">Celebrant's Name</label>
+      <input type="text" id="input-celebrant" autocomplete="off"
+             placeholder="e.g. Isabelle" required />
+    </div>
+    <div class="field">
+      <label id="lbl-from">Your Name</label>
+      <input type="text" id="input-from" autocomplete="off"
+             placeholder="e.g. Julien" required />
+    </div>
+    <div class="field">
+      <label id="lbl-message">Your Message</label>
+      <textarea id="input-message"
+                placeholder="Write something heartfelt…" required></textarea>
+    </div>
+    <button type="submit" class="btn-primary" id="btn-create">
+      Create the Moment
+    </button>
+  </form>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 2 — REVEAL
+═══════════════════════════════════════════════════════ -->
+<section id="page-reveal" class="page">
+
+  <!-- CERTIFICATE CARD -->
+  <div class="cert-outer">
+    <div id="cert-card">
+
+      <!-- Corner ornaments -->
+      <div class="cert-corner tl">
+        <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 36V8C2 4.69 4.69 2 8 2H36" stroke="#c9a84c" stroke-width="1" opacity="0.6"/>
+          <path d="M2 20V2H20" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="cert-corner tr">
+        <svg viewBox="0 0 38 38" fill="none"><path d="M2 36V8C2 4.69 4.69 2 8 2H36" stroke="#c9a84c" stroke-width="1" opacity="0.6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/></svg>
+      </div>
+      <div class="cert-corner bl">
+        <svg viewBox="0 0 38 38" fill="none"><path d="M2 36V8C2 4.69 4.69 2 8 2H36" stroke="#c9a84c" stroke-width="1" opacity="0.6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/></svg>
+      </div>
+      <div class="cert-corner br">
+        <svg viewBox="0 0 38 38" fill="none"><path d="M2 36V8C2 4.69 4.69 2 8 2H36" stroke="#c9a84c" stroke-width="1" opacity="0.6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/></svg>
+      </div>
+
+      <div class="cert-frame"></div>
+
+      <!-- Content -->
+      <div class="cert-header-label" id="cert-header-lbl">Certificate of Appreciation</div>
+
+      <div class="cert-divider">
+        <span></span><div class="cert-divider-diamond"></div><span></span>
+      </div>
+
+      <div class="cert-presented-to" id="cert-presented-lbl">Presented to</div>
+      <div class="cert-name" id="cert-name">—</div>
+      <div class="cert-tagline" id="cert-tagline">
+        For celebrating another beautiful year of life,<br/>
+        and for being truly exceptional.
+      </div>
+
+      <div class="cert-message-wrap">
+        <span class="cert-quote-mark">"</span>
+        <p class="cert-message" id="cert-message">Your message here…</p>
+      </div>
+
+      <div class="cert-divider" style="margin-top:1.5rem;">
+        <span></span><div class="cert-divider-diamond"></div><span></span>
+      </div>
+
+      <div class="cert-signed-label" id="cert-signed-lbl">Signed with appreciation</div>
+      <div class="cert-signature" id="cert-signature">—</div>
+
+      <div class="cert-seal">
+        <div class="cert-seal-inner">Éclat</div>
+        <div class="cert-seal-year" id="seal-year">2026</div>
+      </div>
+
+      <div class="cert-watermark">Maison Éclat — Birthday Atelier</div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="reveal-actions">
+    <button class="btn-primary" id="btn-share">Share this Moment 💫</button>
+    <button class="btn-secondary" id="btn-back">← Create Another</button>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════ -->
+<script>
+/* ─── LANGUAGE DETECTION ───────────────────────────── */
+const lang = navigator.language?.startsWith('fr') ? 'fr' : 'en';
+
+const T = {
+  en: {
+    atelierLabel:    'Birthday Atelier',
+    titleEm:         'Birthday',
+    subtitle:        'Craft a timeless birthday experience',
+    lblCelebrant:    "Celebrant's Name",
+    lblFrom:         'Your Name',
+    lblMessage:      'Your Message',
+    placeholderCel:  'e.g. Isabelle',
+    placeholderFrom: 'e.g. Julien',
+    placeholderMsg:  'Write something heartfelt…',
+    btnCreate:       'Create the Moment',
+    btnShare:        'Share this Moment 💫',
+    btnBack:         '← Create Another',
+    certHeader:      'Certificate of Appreciation',
+    certPresented:   'Presented to',
+    certTagline:     'For celebrating another beautiful year of life,\nand for being truly exceptional.',
+    certSigned:      'Signed with appreciation',
+    shareMsg:        'I created something truly special for you 💖',
+    toastCopied:     'Link copied — share with love',
+    toastOpening:    'Opening WhatsApp…',
+    errorFill:       'Please fill in all fields',
+    pageTitle:       'Maison Éclat — Birthday Atelier',
+  },
+  fr: {
+    atelierLabel:    "Atelier d'Anniversaire",
+    titleEm:         "Anniversaire",
+    subtitle:        "Créez une expérience d'anniversaire inoubliable",
+    lblCelebrant:    'Nom du Festoyé(e)',
+    lblFrom:         'Votre Nom',
+    lblMessage:      'Votre Message',
+    placeholderCel:  'ex. Isabelle',
+    placeholderFrom: 'ex. Julien',
+    placeholderMsg:  'Écrivez quelque chose du fond du cœur…',
+    btnCreate:       'Créer le moment',
+    btnShare:        'Partager ce moment 💫',
+    btnBack:         '← Créer un autre',
+    certHeader:      "Certificat d'Appréciation",
+    certPresented:   'Présenté à',
+    certTagline:     "Pour célébrer une nouvelle et belle année de vie,\net pour être véritablement exceptionnel(le).",
+    certSigned:      'Signé avec affection',
+    shareMsg:        "J'ai créé quelque chose de vraiment spécial pour toi 💖",
+    toastCopied:     'Lien copié — partagez avec amour',
+    toastOpening:    'Ouverture de WhatsApp…',
+    errorFill:       'Veuillez remplir tous les champs',
+    pageTitle:       "Maison Éclat — Atelier d'Anniversaire",
+  }
+};
+
+const t = T[lang];
+
+/* ─── APPLY TRANSLATIONS ───────────────────────────── */
+document.title = t.pageTitle;
+document.getElementById('lbl-atelier').textContent      = t.atelierLabel;
+document.getElementById('title-em').textContent         = t.titleEm;
+document.getElementById('subtitle').textContent         = t.subtitle;
+document.getElementById('lbl-celebrant').textContent    = t.lblCelebrant;
+document.getElementById('lbl-from').textContent         = t.lblFrom;
+document.getElementById('lbl-message').textContent      = t.lblMessage;
+document.getElementById('input-celebrant').placeholder  = t.placeholderCel;
+document.getElementById('input-from').placeholder       = t.placeholderFrom;
+document.getElementById('input-message').placeholder    = t.placeholderMsg;
+document.getElementById('btn-create').textContent       = t.btnCreate;
+document.getElementById('btn-share').textContent        = t.btnShare;
+document.getElementById('btn-back').textContent         = t.btnBack;
+document.getElementById('cert-header-lbl').textContent  = t.certHeader;
+document.getElementById('cert-presented-lbl').textContent = t.certPresented;
+document.getElementById('cert-signed-lbl').textContent  = t.certSigned;
+document.getElementById('seal-year').textContent        = new Date().getFullYear();
+
+/* ─── PAGES ─────────────────────────────────────────── */
+const pageLanding = document.getElementById('page-landing');
+const pageReveal  = document.getElementById('page-reveal');
+
+function showPage(el) {
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.classList.add('exit');
+    setTimeout(() => p.classList.remove('exit'), 900);
+  });
+  setTimeout(() => el.classList.add('active'), 80);
+}
+
+/* ─── LOADING SCREEN ─────────────────────────────────── */
+window.addEventListener('load', () => {
+  const ol = document.getElementById('loading-overlay');
+  setTimeout(() => {
+    ol.classList.add('hidden');
+    setTimeout(() => { ol.style.display='none'; showPage(pageLanding); }, 950);
+  }, 1400);
+});
+
+/* ─── PARTICLES ──────────────────────────────────────── */
+(function spawnParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 14; i++) {
+    const p = document.createElement('div');
+    p.className = 'shimmer-particle';
+    const size = 2 + Math.random() * 4;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}vw;
+      bottom:${-10 + Math.random()*10}vh;
+      animation-duration:${10 + Math.random()*18}s;
+      animation-delay:${Math.random()*12}s;
+    `;
+    container.appendChild(p);
+  }
+})();
+
+/* ─── FORM SUBMIT ────────────────────────────────────── */
+document.getElementById('form').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const celebrant = document.getElementById('input-celebrant').value.trim();
+  const from      = document.getElementById('input-from').value.trim();
+  const message   = document.getElementById('input-message').value.trim();
+
+  if (!celebrant || !from || !message) {
+    showToast(t.errorFill);
+    return;
+  }
+
+  /* populate certificate */
+  document.getElementById('cert-name').textContent      = celebrant;
+  document.getElementById('cert-signature').textContent = from;
+  document.getElementById('cert-message').textContent   = message;
+
+  const lines = t.certTagline.split('\n');
+  document.getElementById('cert-tagline').innerHTML =
+    lines.join('<br/>');
+
+  /* transition */
+  showPage(pageReveal);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ─── BACK BUTTON ────────────────────────────────────── */
+document.getElementById('btn-back').addEventListener('click', () => {
+  showPage(pageLanding);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ─── SHARE ──────────────────────────────────────────── */
+document.getElementById('btn-share').addEventListener('click', async () => {
+  showToast(t.toastOpening);
+
+  try {
+    /* capture certificate as image */
+    const card = document.getElementById('cert-card');
+    const canvas = await html2canvas(card, {
+      backgroundColor: '#0d0d0d',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+
+    /* try Web Share API (mobile) */
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'maison-eclat-birthday.png', { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'Maison Éclat',
+            text: t.shareMsg,
+            files: [file],
+          });
+          return;
+        } catch (_) { /* user cancelled or not supported */ }
+      }
+
+      /* fallback: WhatsApp wa.me without number */
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(t.shareMsg + '\n\n' + window.location.href)}`;
+      window.open(whatsappUrl, '_blank');
+    }, 'image/png');
+
+  } catch (err) {
+    /* ultimate fallback */
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(t.shareMsg)}`;
+    window.open(whatsappUrl, '_blank');
+  }
+});
+
+/* ─── TOAST ──────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+/* ─── SUBTLE CARD TILT ON MOUSE (DESKTOP) ───────────── */
+const certOuter = document.querySelector('.cert-outer');
+document.addEventListener('mousemove', (e) => {
+  if (window.innerWidth < 600) return;
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  const dx = (e.clientX - cx) / cx;
+  const dy = (e.clientY - cy) / cy;
+  certOuter.style.transform =
+    `perspective(900px) rotateX(${-dy * 3}deg) rotateY(${dx * 3}deg)`;
+});
+document.addEventListener('mouseleave', () => {
+  certOuter.style.transform = 'perspective(900px) rotateX(1.5deg) rotateY(0deg)';
+});
+</script>
+</body>
+</html>
