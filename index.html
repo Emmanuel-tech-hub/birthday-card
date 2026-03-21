@@ -11,616 +11,591 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
-/* ─── RESET ────────────────────────────────────────── */
+/* ── RESET ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --gold:        #c9a84c;
-  --gold-light:  #e8d5a3;
-  --gold-dim:    #7a6230;
-  --brown-deep:  #1a1005;
-  --brown-mid:   #120d04;
-  --text:        #e8e0d5;
-  --muted:       #8a7a60;
-  --font-serif:  'Cormorant Garamond', Georgia, serif;
-  --font-script: 'Great Vibes', cursive;
-  --font-sans:   'Montserrat', sans-serif;
-  --ease-lux:    cubic-bezier(0.16, 1, 0.3, 1);
+  --gold:       #c9a84c;
+  --gold-lt:    #e8d5a3;
+  --gold-dim:   #7a6230;
+  --text:       #e8e0d5;
+  --muted:      #8a7a60;
+  --serif:      'Cormorant Garamond', Georgia, serif;
+  --script:     'Great Vibes', cursive;
+  --sans:       'Montserrat', sans-serif;
+  --ease:       cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
-  width: 100%;
-  min-height: 100vh;
-  background: linear-gradient(160deg, #0a0700 0%, #1a1005 40%, #0e0b03 70%, #0a0700 100%);
+  width: 100%; min-height: 100vh;
+  background: linear-gradient(160deg, #0d0900 0%, #1c1206 35%, #0e0b04 65%, #0d0900 100%);
   color: var(--text);
-  font-family: var(--font-serif);
+  font-family: var(--serif);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-/* ─── GLOBAL BACKGROUND VIDEO ──────────────────────── */
-#bg-video-wrap {
-  position: fixed; inset: 0; z-index: 0;
-  overflow: hidden;
+/* ── GLOBAL VIDEO BG ───────────────────────────────── */
+#bg-wrap {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden;
 }
 #bg-video {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
-  transform: scale(1.05);
-  filter: saturate(0.6) brightness(0.45);
+  transform: scale(1.06);
+  filter: saturate(0.55) brightness(0.38);
   will-change: transform;
 }
-#bg-video-wrap::before {
+#bg-wrap::before {
   content: '';
   position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(
-    135deg,
-    rgba(10,7,0,0.78) 0%,
-    rgba(20,14,3,0.55) 50%,
-    rgba(10,7,0,0.78) 100%
-  );
+  background: linear-gradient(135deg, rgba(13,9,0,.80) 0%, rgba(22,15,4,.55) 50%, rgba(13,9,0,.80) 100%);
 }
-#bg-video-wrap::after {
+#bg-wrap::after {
   content: '';
   position: absolute; inset: 0; z-index: 2;
-  background: radial-gradient(ellipse at 50% 25%, transparent 20%, rgba(0,0,0,0.7) 100%);
+  background: radial-gradient(ellipse at 50% 20%, transparent 18%, rgba(0,0,0,.65) 100%);
 }
 
-/* ─── PAGES ─────────────────────────────────────────── */
+/* ── PAGES ─────────────────────────────────────────── */
 .page {
   position: relative; z-index: 10;
-  width: 100%;
-  min-height: 100dvh;
+  width: 100%; min-height: 100dvh;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 4rem 1.5rem 5rem;
   opacity: 0;
-  transition: opacity 0.85s var(--ease-lux), transform 0.85s var(--ease-lux);
+  transition: opacity .85s var(--ease), transform .85s var(--ease);
   pointer-events: none;
 }
 .page.active  { opacity: 1; pointer-events: all; }
-.page.exit    { opacity: 0; transform: scale(0.97); }
+.page.exit    { opacity: 0; transform: scale(.97); }
 
-/* ─── LOADING OVERLAY ───────────────────────────────── */
-#loading-overlay {
-  position: fixed; inset: 0; z-index: 300;
-  background: #0a0700;
+/* ── LOADING ───────────────────────────────────────── */
+#loading {
+  position: fixed; inset: 0; z-index: 500;
+  background: #0d0900;
   display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 1.2rem;
-  opacity: 1;
-  transition: opacity 1s ease;
+  opacity: 1; transition: opacity .9s ease;
 }
-#loading-overlay.hidden { opacity: 0; pointer-events: none; }
-.loader-logo {
-  font-family: var(--font-script);
-  font-size: 3.2rem;
-  color: var(--gold);
-  text-shadow: 0 0 40px rgba(201,168,76,0.5);
-  animation: pulse 2s ease-in-out infinite;
+#loading.hidden { opacity: 0; pointer-events: none; }
+.ld-logo {
+  font-family: var(--script);
+  font-size: 3rem; color: var(--gold);
+  text-shadow: 0 0 50px rgba(201,168,76,.5);
+  animation: breathe 2.2s ease-in-out infinite;
 }
-.loader-line {
+.ld-line {
   width: 0; height: 1px;
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  animation: expandLine 1.8s var(--ease-lux) forwards 0.3s;
+  animation: grow 1.8s var(--ease) forwards .3s;
 }
-@keyframes expandLine { to { width: 120px; } }
-@keyframes pulse {
-  0%,100% { opacity: 0.7; }
-  50% { opacity: 1; text-shadow: 0 0 60px rgba(201,168,76,0.7); }
+@keyframes grow   { to { width: 110px; } }
+@keyframes breathe {
+  0%,100% { opacity: .65; }
+  50% { opacity: 1; text-shadow: 0 0 70px rgba(201,168,76,.7); }
 }
 
-/* ─── LOGO / BRAND ──────────────────────────────────── */
+/* ── LANDING ───────────────────────────────────────── */
+.atelier-label {
+  font-family: var(--sans); font-weight: 300;
+  font-size: clamp(.5rem,1.2vw,.64rem);
+  letter-spacing: .4em; text-transform: uppercase;
+  color: var(--gold); opacity: .8; margin-bottom: .9rem;
+}
 .logo-mark {
-  font-family: var(--font-script);
-  font-size: clamp(2.8rem, 6vw, 4.4rem);
-  color: var(--gold);
-  letter-spacing: 0.03em;
-  text-shadow: 0 0 50px rgba(201,168,76,0.4);
-  line-height: 1;
-  margin-bottom: 0.2rem;
+  font-family: var(--script);
+  font-size: clamp(2.8rem,6vw,4.4rem);
+  color: var(--gold); line-height: 1;
+  text-shadow: 0 0 55px rgba(201,168,76,.42);
+  margin-bottom: .15rem;
 }
 .logo-rule {
-  width: 60px; height: 1px;
+  width: 58px; height: 1px;
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  margin: 0.7rem auto 1.6rem;
+  margin: .65rem auto 1.6rem;
 }
-.atelier-label {
-  font-family: var(--font-sans);
-  font-size: clamp(0.5rem, 1.2vw, 0.65rem);
-  font-weight: 300;
-  letter-spacing: 0.38em;
-  text-transform: uppercase;
-  color: var(--gold);
-  opacity: 0.8;
-  margin-bottom: 1rem;
-}
-
-/* ─── LANDING TYPOGRAPHY ────────────────────────────── */
 .main-title {
-  font-size: clamp(2rem, 5.5vw, 3.6rem);
-  font-weight: 300;
-  letter-spacing: 0.07em;
-  text-align: center;
-  color: var(--text);
-  line-height: 1.2;
+  font-size: clamp(1.9rem,5vw,3.4rem);
+  font-weight: 300; letter-spacing: .07em;
+  text-align: center; color: var(--text); line-height: 1.2;
 }
-.main-title em { font-style: italic; color: var(--gold-light); }
-
+.main-title em { font-style: italic; color: var(--gold-lt); }
 .subtitle {
-  margin-top: 1rem;
-  font-size: clamp(0.88rem, 1.8vw, 1.08rem);
-  font-style: italic;
-  font-weight: 300;
-  color: var(--muted);
-  letter-spacing: 0.05em;
-  text-align: center;
+  margin-top: .9rem;
+  font-size: clamp(.86rem,1.8vw,1.06rem);
+  font-style: italic; font-weight: 300;
+  color: var(--muted); letter-spacing: .05em; text-align: center;
 }
 
-/* ─── FORM ──────────────────────────────────────────── */
+/* ── FORM ──────────────────────────────────────────── */
 .form-wrap {
-  margin-top: 3rem;
-  width: 100%;
-  max-width: 500px;
-  display: flex; flex-direction: column; gap: 1.5rem;
+  margin-top: 2.8rem; width: 100%; max-width: 490px;
+  display: flex; flex-direction: column; gap: 1.45rem;
 }
-
 .field { position: relative; }
 .field label {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 0.58rem;
-  font-weight: 300;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--gold-dim);
-  margin-bottom: 0.5rem;
-  padding-left: 2px;
+  display: block; font-family: var(--sans); font-size: .57rem;
+  font-weight: 300; letter-spacing: .3em; text-transform: uppercase;
+  color: var(--gold-dim); margin-bottom: .48rem; padding-left: 2px;
 }
-.field input,
-.field textarea {
+.field input, .field textarea {
   width: 100%;
-  background: rgba(255,255,255,0.03);
-  border: none;
-  border-bottom: 1px solid rgba(201,168,76,0.22);
-  padding: 0.75rem 0.2rem;
-  font-family: var(--font-serif);
-  font-size: clamp(0.95rem, 2vw, 1.05rem);
-  font-weight: 300;
-  color: var(--text);
-  outline: none;
-  transition: border-color 0.4s, box-shadow 0.4s;
-  resize: none;
-  caret-color: var(--gold);
+  background: rgba(255,255,255,.03);
+  border: none; border-bottom: 1px solid rgba(201,168,76,.22);
+  padding: .72rem .18rem;
+  font-family: var(--serif); font-size: clamp(.95rem,2vw,1.04rem);
+  font-weight: 300; color: var(--text); outline: none;
+  transition: border-color .4s, box-shadow .4s;
+  resize: none; caret-color: var(--gold);
 }
-.field input::placeholder,
-.field textarea::placeholder { color: rgba(232,224,213,0.2); }
-.field input:focus,
-.field textarea:focus {
+.field input::placeholder, .field textarea::placeholder { color: rgba(232,224,213,.2); }
+.field input:focus, .field textarea:focus {
   border-bottom-color: var(--gold);
-  box-shadow: 0 3px 20px -6px rgba(201,168,76,0.2);
+  box-shadow: 0 3px 20px -6px rgba(201,168,76,.2);
 }
-.field textarea { min-height: 90px; }
+.field textarea { min-height: 86px; }
 .field::after {
-  content: '';
-  position: absolute; bottom: 0; left: 0;
-  width: 0; height: 1px;
-  background: var(--gold);
-  transition: width 0.5s var(--ease-lux);
+  content: ''; position: absolute; bottom: 0; left: 0;
+  width: 0; height: 1px; background: var(--gold);
+  transition: width .5s var(--ease);
 }
 .field:focus-within::after { width: 100%; }
 
-/* ─── PHOTO UPLOAD FIELD ────────────────────────────── */
+/* upload */
 .upload-field {
-  display: flex; align-items: center; gap: 1rem;
-  cursor: pointer;
-  padding: 0.75rem 1rem;
-  border: 1px dashed rgba(201,168,76,0.25);
-  transition: border-color 0.3s, background 0.3s;
+  display: flex; align-items: center; gap: .9rem;
+  cursor: pointer; padding: .7rem 1rem;
+  border: 1px dashed rgba(201,168,76,.24);
+  transition: border-color .3s, background .3s;
 }
-.upload-field:hover {
-  border-color: rgba(201,168,76,0.55);
-  background: rgba(201,168,76,0.04);
-}
+.upload-field:hover { border-color: rgba(201,168,76,.5); background: rgba(201,168,76,.04); }
 .upload-field input[type="file"] { display: none; }
-.upload-icon {
-  font-size: 1.4rem;
-  line-height: 1;
-  opacity: 0.6;
-}
+.upload-icon { font-size: 1.3rem; opacity: .55; line-height: 1; }
 .upload-text {
-  font-family: var(--font-sans);
-  font-size: 0.6rem;
-  font-weight: 300;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  font-family: var(--sans); font-size: .59rem;
+  font-weight: 300; letter-spacing: .22em; text-transform: uppercase;
   color: var(--gold-dim);
 }
 .upload-preview {
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid rgba(201,168,76,0.35);
-  display: none;
-  margin-left: auto;
-  flex-shrink: 0;
+  width: 40px; height: 40px; border-radius: 50%;
+  object-fit: cover; border: 1px solid rgba(201,168,76,.35);
+  display: none; margin-left: auto; flex-shrink: 0;
 }
 .upload-preview.visible { display: block; }
 
-/* ─── BUTTONS ───────────────────────────────────────── */
+/* buttons */
 .btn-primary {
   padding: 1rem 2.8rem;
-  font-family: var(--font-sans);
-  font-size: 0.66rem;
-  font-weight: 300;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
+  font-family: var(--sans); font-size: .65rem; font-weight: 300;
+  letter-spacing: .32em; text-transform: uppercase;
   color: #0a0700;
   background: linear-gradient(135deg, #c9a84c 0%, #e8d5a3 50%, #c9a84c 100%);
   background-size: 200% 100%;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: background-position 0.6s, box-shadow 0.5s, transform 0.3s;
+  border: none; cursor: pointer;
+  transition: background-position .6s, box-shadow .5s, transform .3s;
   align-self: center;
   -webkit-tap-highlight-color: transparent;
 }
 .btn-primary:hover {
   background-position: 100% 0;
-  box-shadow: 0 4px 36px rgba(201,168,76,0.32), 0 0 60px rgba(201,168,76,0.08);
+  box-shadow: 0 4px 36px rgba(201,168,76,.3), 0 0 60px rgba(201,168,76,.07);
   transform: translateY(-2px);
 }
 .btn-primary:active { transform: translateY(0); }
 
 .btn-secondary {
-  padding: 0.9rem 2.2rem;
-  font-family: var(--font-sans);
-  font-size: 0.6rem;
-  font-weight: 300;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--gold);
-  background: transparent;
-  border: 1px solid rgba(201,168,76,0.3);
-  cursor: pointer;
-  transition: border-color 0.4s, box-shadow 0.4s, transform 0.3s;
+  padding: .9rem 2.2rem;
+  font-family: var(--sans); font-size: .6rem; font-weight: 300;
+  letter-spacing: .3em; text-transform: uppercase;
+  color: var(--gold); background: transparent;
+  border: 1px solid rgba(201,168,76,.3); cursor: pointer;
+  transition: border-color .4s, box-shadow .4s, transform .3s;
   -webkit-tap-highlight-color: transparent;
 }
 .btn-secondary:hover {
   border-color: var(--gold);
-  box-shadow: inset 0 0 20px rgba(201,168,76,0.06), 0 0 24px rgba(201,168,76,0.1);
+  box-shadow: inset 0 0 20px rgba(201,168,76,.06), 0 0 24px rgba(201,168,76,.1);
   transform: translateY(-2px);
 }
 
-/* ─── REVEAL PAGE ───────────────────────────────────── */
+/* ══════════════════════════════════════════════════════
+   REVEAL PAGE
+══════════════════════════════════════════════════════ */
 #page-reveal {
-  padding: 5rem 1.5rem 5rem;
-  gap: 2.8rem;
+  padding: 4.5rem 1.2rem 5rem;
+  gap: 2.4rem;
+  justify-content: flex-start;
 }
 
-/* ─── CERTIFICATE ───────────────────────────────────── */
-.cert-outer {
+/* ── SCENE WRAPPER ─────────────────────────────────── */
+.scene {
   position: relative;
   width: 100%;
-  max-width: 620px;
-  box-shadow:
-    0 2px 0 1px rgba(122,98,48,0.8),
-    0 4px 0 2px rgba(90,72,32,0.6),
-    0 6px 0 3px rgba(58,46,16,0.5),
-    0 12px 50px -4px rgba(0,0,0,0.9),
-    0 32px 90px -10px rgba(0,0,0,0.75);
-  transform: perspective(1000px) rotateX(1.2deg);
-  transition: transform 0.9s var(--ease-lux), box-shadow 0.9s var(--ease-lux);
-  border-radius: 2px;
-}
-.cert-outer:hover {
-  transform: perspective(1000px) rotateX(0deg) translateY(-5px);
-  box-shadow:
-    0 2px 0 1px rgba(122,98,48,0.8),
-    0 4px 0 2px rgba(90,72,32,0.6),
-    0 6px 0 3px rgba(58,46,16,0.5),
-    0 20px 70px -4px rgba(0,0,0,0.95),
-    0 45px 110px -10px rgba(0,0,0,0.8);
+  max-width: 640px;
+  /* min-height so short screens still scroll comfortably */
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#cert-card {
-  position: relative;
-  /* glass effect — needs uploaded photo as --cert-bg */
-  background: rgba(12, 9, 2, 0.72);
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  border: 1px solid rgba(201,168,76,0.28);
-  padding: clamp(2.4rem, 7vw, 4.2rem) clamp(2rem, 5.5vw, 3.8rem);
-  overflow: hidden;
-  text-align: center;
-  border-radius: 2px;
-}
-
-/* cert background image layer */
-#cert-bg-layer {
-  position: absolute; inset: 0;
-  background-size: cover;
-  background-position: center;
-  filter: blur(22px) brightness(0.35) saturate(0.7);
-  transform: scale(1.08);
-  opacity: 0;
-  transition: opacity 1.2s var(--ease-lux);
+/* ── LAYER 1 — ambient glow behind portrait ─────────── */
+.portrait-glow {
+  position: absolute;
+  inset: -40px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(201,168,76,.13) 0%,
+    transparent 65%);
+  filter: blur(30px);
+  pointer-events: none;
   z-index: 0;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease);
 }
-#cert-bg-layer.visible { opacity: 1; }
+.portrait-glow.visible { opacity: 1; }
 
-/* soft gradient overlay over photo */
-#cert-bg-layer::after {
+/* ── LAYER 2 — portrait image ──────────────────────── */
+.portrait-wrap {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(160px, 38%, 220px);
+  height: clamp(200px, 50%, 280px);
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 1s var(--ease) .2s;
+}
+.portrait-wrap.visible { opacity: 1; }
+
+.portrait-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  /* soft but NOT over-blurred — just a touch */
+  filter: blur(0.6px) brightness(0.88) saturate(0.9);
+  display: block;
+}
+/* elegant vignette overlay on portrait */
+.portrait-wrap::after {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(
-    160deg,
-    rgba(20,14,3,0.55) 0%,
-    rgba(10,8,2,0.35) 50%,
-    rgba(20,14,3,0.55) 100%
-  );
+  border-radius: 4px;
+  background:
+    linear-gradient(180deg,
+      rgba(13,9,0,.25) 0%,
+      transparent 30%,
+      transparent 70%,
+      rgba(13,9,0,.35) 100%),
+    linear-gradient(90deg,
+      rgba(13,9,0,.18) 0%,
+      transparent 20%,
+      transparent 80%,
+      rgba(13,9,0,.18) 100%);
 }
 
-/* all cert text above bg */
-#cert-card > *:not(#cert-bg-layer) { position: relative; z-index: 1; }
+/* thin gold frame around portrait */
+.portrait-frame {
+  position: absolute; inset: -5px;
+  border: 1px solid rgba(201,168,76,.28);
+  border-radius: 5px;
+  pointer-events: none;
+}
 
-/* ambient light sweep */
-#cert-card::before {
+/* ── LAYER 3 — glass card ──────────────────────────── */
+.glass-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  background: rgba(13, 9, 1, 0.62);
+  backdrop-filter: blur(20px) saturate(1.25);
+  -webkit-backdrop-filter: blur(20px) saturate(1.25);
+  border: 1px solid rgba(201,168,76,.26);
+  padding: clamp(2.2rem,6vw,3.8rem) clamp(1.8rem,5.5vw,3.4rem);
+  text-align: center;
+  box-shadow:
+    0 2px 0 1px rgba(120,96,46,.7),
+    0 4px 0 2px rgba(88,70,30,.5),
+    0 8px 40px -4px rgba(0,0,0,.85),
+    0 28px 80px -10px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(201,168,76,.08);
+  transform: perspective(1000px) rotateX(1deg);
+  transition: transform .9s var(--ease), box-shadow .9s var(--ease);
+}
+.glass-card:hover {
+  transform: perspective(1000px) rotateX(0deg) translateY(-4px);
+  box-shadow:
+    0 2px 0 1px rgba(120,96,46,.7),
+    0 4px 0 2px rgba(88,70,30,.5),
+    0 16px 60px -4px rgba(0,0,0,.9),
+    0 40px 100px -10px rgba(0,0,0,.75),
+    inset 0 1px 0 rgba(201,168,76,.1);
+}
+
+/* light sheen on glass */
+.glass-card::before {
   content: '';
-  position: absolute; inset: 0; z-index: 2;
+  position: absolute; inset: 0;
   background: linear-gradient(
     115deg,
-    transparent 25%,
-    rgba(201,168,76,0.06) 50%,
-    transparent 75%
+    transparent 30%,
+    rgba(201,168,76,.05) 50%,
+    transparent 70%
   );
+  pointer-events: none;
+}
+
+/* inner gold rule frame */
+.card-frame {
+  position: absolute; inset: 18px;
+  border: 1px solid rgba(201,168,76,.09);
   pointer-events: none;
 }
 
 /* corner ornaments */
-.cert-corner {
-  position: absolute;
-  width: 40px; height: 40px;
-  opacity: 0.45;
-  z-index: 2;
+.cc {
+  position: absolute; width: 36px; height: 36px; opacity: .42;
 }
-.cert-corner svg { width: 100%; height: 100%; }
-.cert-corner.tl { top: 14px; left: 14px; }
-.cert-corner.tr { top: 14px; right: 14px; transform: scaleX(-1); }
-.cert-corner.bl { bottom: 14px; left: 14px; transform: scaleY(-1); }
-.cert-corner.br { bottom: 14px; right: 14px; transform: scale(-1); }
+.cc svg { width: 100%; height: 100%; }
+.cc.tl { top: 12px; left: 12px; }
+.cc.tr { top: 12px; right: 12px; transform: scaleX(-1); }
+.cc.bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
+.cc.br { bottom: 12px; right: 12px; transform: scale(-1); }
 
-/* inner frame */
-.cert-frame {
-  position: absolute; inset: 22px;
-  border: 1px solid rgba(201,168,76,0.1);
-  pointer-events: none;
-  z-index: 2;
-  border-radius: 1px;
-}
+/* ── CARD CONTENT ──────────────────────────────────── */
 
-/* cert typography */
-.cert-header-label {
-  font-family: var(--font-sans);
-  font-size: clamp(0.46rem, 1vw, 0.58rem);
-  font-weight: 300;
-  letter-spacing: 0.48em;
+/* "Happy Birthday" hero line */
+.hb-line {
+  font-family: var(--sans);
+  font-size: clamp(.46rem,.95vw,.58rem);
+  font-weight: 300; letter-spacing: .46em;
   text-transform: uppercase;
-  color: var(--gold);
-  opacity: 0.65;
-  margin-bottom: 0.4rem;
+  color: var(--gold); opacity: .75;
+  margin-bottom: .3rem;
 }
-.cert-divider {
-  display: flex; align-items: center; gap: 0.8rem;
-  margin: 0.5rem auto 1.1rem;
-  max-width: 240px;
-}
-.cert-divider span {
-  flex: 1; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.38), transparent);
-}
-.cert-diamond {
-  width: 5px; height: 5px;
-  background: var(--gold);
-  transform: rotate(45deg);
-  opacity: 0.65;
-  flex-shrink: 0;
-}
-.cert-presented-to {
-  font-family: var(--font-serif);
-  font-size: clamp(0.7rem, 1.5vw, 0.84rem);
-  font-style: italic;
-  font-weight: 300;
-  color: var(--muted);
-  letter-spacing: 0.09em;
-  margin-bottom: 0.4rem;
-}
-.cert-name {
-  font-family: var(--font-script);
-  font-size: clamp(2.4rem, 7.5vw, 4rem);
-  color: var(--gold-light);
+
+.hb-text {
+  font-family: var(--script);
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  color: var(--gold-lt);
   text-shadow:
-    0 0 50px rgba(201,168,76,0.35),
-    0 2px 16px rgba(0,0,0,0.9);
-  line-height: 1.15;
-  margin-bottom: 0.25rem;
+    0 0 60px rgba(201,168,76,.38),
+    0 2px 14px rgba(0,0,0,.85);
+  line-height: 1.1;
+  margin-bottom: .1rem;
 }
-.cert-tagline {
-  font-family: var(--font-serif);
-  font-size: clamp(0.76rem, 1.6vw, 0.9rem);
-  font-style: italic;
-  font-weight: 300;
-  color: rgba(232,224,213,0.42);
-  letter-spacing: 0.04em;
-  margin: 0.5rem 0 1.5rem;
-  line-height: 1.65;
+
+.divider {
+  display: flex; align-items: center; gap: .75rem;
+  margin: .6rem auto 1rem;
+  max-width: 220px;
 }
-.cert-message-wrap {
+.divider span {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,.35), transparent);
+}
+.diamond {
+  width: 5px; height: 5px;
+  background: var(--gold); transform: rotate(45deg);
+  opacity: .62; flex-shrink: 0;
+}
+
+/* portrait space hint (empty state) */
+.portrait-hint {
+  width: clamp(64px, 15%, 84px);
+  height: clamp(64px, 15%, 84px);
+  border-radius: 50%;
+  border: 1px dashed rgba(201,168,76,.22);
+  margin: .2rem auto .8rem;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--sans); font-size: .46rem;
+  letter-spacing: .2em; color: rgba(201,168,76,.3);
+  text-transform: uppercase;
+}
+.portrait-hint.hidden { display: none; }
+
+/* name — refined, not giant */
+.card-presented {
+  font-family: var(--serif);
+  font-size: clamp(.68rem,1.4vw,.8rem);
+  font-style: italic; font-weight: 300;
+  color: var(--muted); letter-spacing: .08em;
+  margin-bottom: .3rem;
+}
+.card-name {
+  font-family: var(--script);
+  font-size: clamp(1.7rem, 5vw, 2.6rem);
+  color: var(--gold-lt);
+  text-shadow: 0 0 36px rgba(201,168,76,.28), 0 1px 12px rgba(0,0,0,.8);
+  line-height: 1.2;
+  margin-bottom: .6rem;
+}
+
+/* tagline */
+.card-tagline {
+  font-family: var(--serif);
+  font-size: clamp(.74rem,1.5vw,.86rem);
+  font-style: italic; font-weight: 300;
+  color: rgba(232,224,213,.38);
+  letter-spacing: .04em;
+  margin-bottom: 1.3rem; line-height: 1.62;
+}
+
+/* message */
+.msg-wrap {
   position: relative;
-  margin: 0 auto 1.6rem;
-  max-width: 84%;
-  padding: 1.1rem 1.4rem 1rem;
-  background: rgba(201,168,76,0.05);
-  border-left: 2px solid rgba(201,168,76,0.28);
+  margin: 0 auto 1.4rem;
+  max-width: 85%;
+  padding: 1rem 1.3rem .9rem;
+  background: rgba(201,168,76,.045);
+  border-left: 1.5px solid rgba(201,168,76,.26);
 }
-.cert-quote-mark {
-  position: absolute;
-  top: -0.6rem; left: 0.8rem;
-  font-family: var(--font-serif);
-  font-size: 3.2rem;
-  color: rgba(201,168,76,0.22);
-  line-height: 1;
+.msg-quote {
+  position: absolute; top: -.55rem; left: .75rem;
+  font-family: var(--serif); font-size: 2.8rem;
+  color: rgba(201,168,76,.2); line-height: 1;
 }
-.cert-message {
-  font-family: var(--font-serif);
-  font-size: clamp(0.88rem, 1.8vw, 1rem);
-  font-style: italic;
-  font-weight: 300;
-  color: rgba(232,224,213,0.78);
-  line-height: 1.8;
-  letter-spacing: 0.02em;
+.msg-text {
+  font-family: var(--serif);
+  font-size: clamp(.86rem,1.8vw,.98rem);
+  font-style: italic; font-weight: 300;
+  color: rgba(232,224,213,.78);
+  line-height: 1.78; letter-spacing: .02em;
 }
 
 /* signature */
-.cert-signed-label {
-  font-family: var(--font-sans);
-  font-size: clamp(0.46rem, 1vw, 0.56rem);
-  font-weight: 300;
-  letter-spacing: 0.38em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 0.25rem;
+.signed-label {
+  font-family: var(--sans); font-size: clamp(.44rem,.9vw,.54rem);
+  font-weight: 300; letter-spacing: .38em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: .2rem;
 }
-.cert-signature {
-  font-family: var(--font-script);
-  font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+.signature {
+  font-family: var(--script);
+  font-size: clamp(1.4rem,4vw,2rem);
   color: var(--gold);
-  text-shadow: 0 0 24px rgba(201,168,76,0.22);
+  text-shadow: 0 0 20px rgba(201,168,76,.2);
   line-height: 1.2;
 }
 
-/* ─── SEAL — minimal embossed ring ─────────────────── */
-.cert-seal {
+/* seal — three concentric rings only */
+.seal {
   display: inline-flex; align-items: center; justify-content: center;
-  width: clamp(64px, 11vw, 82px);
-  height: clamp(64px, 11vw, 82px);
+  width: clamp(58px,10vw,74px); height: clamp(58px,10vw,74px);
   border-radius: 50%;
-  border: 1px solid rgba(201,168,76,0.38);
+  border: 1px solid rgba(201,168,76,.35);
   box-shadow:
-    0 0 0 4px rgba(201,168,76,0.05),
-    0 0 0 8px rgba(201,168,76,0.03),
-    0 0 22px rgba(201,168,76,0.12),
-    inset 0 0 14px rgba(201,168,76,0.05);
+    0 0 0 4px rgba(201,168,76,.05),
+    0 0 0 8px rgba(201,168,76,.025),
+    0 0 20px rgba(201,168,76,.1),
+    inset 0 0 12px rgba(201,168,76,.04);
+  margin-top: 1.4rem; position: relative;
+}
+.seal::before {
+  content: ''; position: absolute; inset: 7px;
+  border-radius: 50%; border: 1px solid rgba(201,168,76,.16);
+}
+.seal::after {
+  content: ''; position: absolute; inset: 14px;
+  border-radius: 50%; border: 1px solid rgba(201,168,76,.07);
+}
+
+.watermark {
   margin-top: 1.6rem;
-  position: relative;
-}
-.cert-seal::before {
-  content: '';
-  position: absolute; inset: 7px;
-  border-radius: 50%;
-  border: 1px solid rgba(201,168,76,0.18);
-}
-.cert-seal::after {
-  content: '';
-  position: absolute; inset: 14px;
-  border-radius: 50%;
-  border: 1px solid rgba(201,168,76,0.08);
+  font-family: var(--sans); font-size: .46rem;
+  letter-spacing: .46em; text-transform: uppercase;
+  color: rgba(201,168,76,.16);
 }
 
-/* watermark */
-.cert-watermark {
-  margin-top: 1.8rem;
-  font-family: var(--font-sans);
-  font-size: 0.48rem;
-  letter-spacing: 0.48em;
-  text-transform: uppercase;
-  color: rgba(201,168,76,0.18);
-}
-
-/* ─── ACTIONS ───────────────────────────────────────── */
+/* ── ACTIONS ───────────────────────────────────────── */
 .reveal-actions {
-  display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
-  width: 100%; max-width: 620px;
+  display: flex; gap: 1rem; flex-wrap: wrap;
+  justify-content: center;
+  width: 100%; max-width: 640px;
 }
 
-/* ─── TOAST ─────────────────────────────────────────── */
+/* ── TOAST ─────────────────────────────────────────── */
 #toast {
   position: fixed; bottom: 2rem; left: 50%;
-  transform: translateX(-50%) translateY(16px);
-  background: rgba(20,14,3,0.9);
-  border: 1px solid rgba(201,168,76,0.35);
-  color: var(--gold-light);
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  padding: 0.75rem 1.8rem;
-  z-index: 400;
+  transform: translateX(-50%) translateY(14px);
+  background: rgba(18,12,2,.92);
+  border: 1px solid rgba(201,168,76,.35);
+  color: var(--gold-lt);
+  font-family: var(--sans); font-size: .6rem;
+  letter-spacing: .22em; text-transform: uppercase;
+  padding: .72rem 1.8rem; z-index: 600;
   opacity: 0;
-  transition: opacity 0.4s ease, transform 0.4s var(--ease-lux);
-  pointer-events: none;
-  white-space: nowrap;
+  transition: opacity .4s ease, transform .4s var(--ease);
+  pointer-events: none; white-space: nowrap;
   backdrop-filter: blur(8px);
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ─── PARTICLES ─────────────────────────────────────── */
-.shimmer-particle {
+/* ── PARTICLES ─────────────────────────────────────── */
+.sp {
   position: fixed; border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,168,76,0.55), transparent 65%);
+  background: radial-gradient(circle, rgba(201,168,76,.52), transparent 65%);
   pointer-events: none; z-index: 5;
-  animation: floatUp linear infinite;
-  opacity: 0;
+  animation: rise linear infinite; opacity: 0;
 }
-@keyframes floatUp {
-  0%   { opacity: 0; transform: translateY(0) scale(0.4); }
-  15%  { opacity: 0.35; }
-  85%  { opacity: 0.12; }
-  100% { opacity: 0; transform: translateY(-65vh) scale(1.6); }
+@keyframes rise {
+  0%   { opacity: 0; transform: translateY(0) scale(.4); }
+  15%  { opacity: .32; }
+  85%  { opacity: .1; }
+  100% { opacity: 0; transform: translateY(-65vh) scale(1.5); }
 }
 
-/* ─── MOBILE ─────────────────────────────────────────── */
+/* ── MOBILE ─────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .page { padding: 3.5rem 1.2rem 4.5rem; justify-content: flex-start; padding-top: 5rem; }
+  .page { padding: 3.5rem 1.1rem 4.5rem; justify-content: flex-start; padding-top: 5rem; }
   #page-reveal { padding-top: 4rem; }
-  .cert-outer { transform: none !important; }
-  .cert-message-wrap { max-width: 100%; }
+  .glass-card { transform: none !important; }
+  .msg-wrap { max-width: 100%; }
   .reveal-actions { flex-direction: column; align-items: stretch; }
   .reveal-actions .btn-primary,
   .reveal-actions .btn-secondary { align-self: stretch; text-align: center; padding: 1.1rem; }
   .btn-primary { align-self: stretch; text-align: center; }
+  /* on mobile portrait sits above card, not overlapping */
+  .scene { flex-direction: column; min-height: auto; }
+  .portrait-wrap {
+    position: relative; top: auto; left: auto;
+    transform: none;
+    width: clamp(120px,45vw,160px);
+    height: clamp(150px,55vw,200px);
+    margin-bottom: -2.5rem; /* slight overlap into card */
+    z-index: 3;
+  }
+  .glass-card { width: 100%; }
 }
-
 @media (max-width: 380px) {
-  .cert-name { font-size: 2rem; }
+  .hb-text { font-size: 1.9rem; }
+  .card-name { font-size: 1.5rem; }
 }
 </style>
 </head>
-
 <body>
 
 <!-- LOADING -->
-<div id="loading-overlay">
-  <div class="loader-logo">Maison Éclat</div>
-  <div class="loader-line"></div>
+<div id="loading">
+  <div class="ld-logo">Maison Éclat</div>
+  <div class="ld-line"></div>
 </div>
 
-<!-- BACKGROUND VIDEO -->
-<div id="bg-video-wrap">
+<!-- VIDEO BACKGROUND -->
+<div id="bg-wrap">
   <video id="bg-video" autoplay muted loop playsinline preload="none">
     <!--
-      Drop your video file here:
+      RECOMMENDED (free, no signup):
+        pexels.com   → search "silk fabric slow motion" or "gold bokeh"
+        coverr.co    → search "luxury" or "fashion"
+        pixabay.com  → search "gold dust particles"
+      Format: MP4 H.264, 1080p, ≤4 Mbps, 30fps, looped
       <source src="luxury-bg.mp4" type="video/mp4" />
-
-      Free luxury videos (silk, champagne, gold bokeh):
-        pexels.com  |  coverr.co  |  pixabay.com
-      Recommended: "silk fabric slow motion" or "gold dust particles"
-      Encode: MP4, H.264, ≤4 Mbps, 1080p, 30fps
     -->
   </video>
 </div>
@@ -631,22 +606,22 @@ body {
 <!-- TOAST -->
 <div id="toast"></div>
 
-<!-- ═══ PAGE 1 — LANDING ══════════════════════════════ -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE 1 — LANDING
+══════════════════════════════════════════════════ -->
 <section id="page-landing" class="page">
+
   <div class="atelier-label" id="lbl-atelier">Birthday Atelier</div>
   <div class="logo-mark">Maison Éclat</div>
   <div class="logo-rule"></div>
-
-  <h1 class="main-title">
-    <em id="title-em">Birthday</em> Atelier
-  </h1>
+  <h1 class="main-title"><em id="title-em">Birthday</em> Atelier</h1>
   <p class="subtitle" id="subtitle">Craft a timeless birthday experience</p>
 
   <form class="form-wrap" id="form" novalidate>
 
-    <!-- Photo upload -->
     <div class="field">
-      <label id="lbl-photo">Celebrant's Photo <span style="opacity:0.5;font-size:0.9em">(optional)</span></label>
+      <label id="lbl-photo">Celebrant's Photo <span style="opacity:.45;font-size:.85em">(optional)</span></label>
       <label class="upload-field" for="input-photo">
         <span class="upload-icon">🖼</span>
         <span class="upload-text" id="upload-text">Upload a photo</span>
@@ -674,154 +649,171 @@ body {
   </form>
 </section>
 
-<!-- ═══ PAGE 2 — REVEAL ═══════════════════════════════ -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE 2 — REVEAL
+══════════════════════════════════════════════════ -->
 <section id="page-reveal" class="page">
 
-  <div class="cert-outer">
-    <div id="cert-card">
+  <div class="scene" id="scene">
 
-      <!-- photo background layer -->
-      <div id="cert-bg-layer"></div>
+    <!-- Layer 1: ambient glow -->
+    <div class="portrait-glow" id="portrait-glow"></div>
 
-      <!-- corners -->
-      <div class="cert-corner tl">
-        <svg viewBox="0 0 40 40" fill="none">
-          <path d="M2 38V8C2 4.69 4.69 2 8 2H38" stroke="#c9a84c" stroke-width="1" opacity="0.6"/>
-          <path d="M2 20V2H20" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/>
-        </svg>
-      </div>
-      <div class="cert-corner tr">
-        <svg viewBox="0 0 40 40" fill="none"><path d="M2 38V8C2 4.69 4.69 2 8 2H38" stroke="#c9a84c" stroke-width="1" opacity="0.6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/></svg>
-      </div>
-      <div class="cert-corner bl">
-        <svg viewBox="0 0 40 40" fill="none"><path d="M2 38V8C2 4.69 4.69 2 8 2H38" stroke="#c9a84c" stroke-width="1" opacity="0.6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/></svg>
-      </div>
-      <div class="cert-corner br">
-        <svg viewBox="0 0 40 40" fill="none"><path d="M2 38V8C2 4.69 4.69 2 8 2H38" stroke="#c9a84c" stroke-width="1" opacity="0.6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/></svg>
-      </div>
+    <!-- Layer 2: portrait -->
+    <div class="portrait-wrap" id="portrait-wrap">
+      <img class="portrait-img" id="portrait-img" src="" alt="" />
+      <div class="portrait-frame"></div>
+    </div>
 
-      <div class="cert-frame"></div>
+    <!-- Layer 3: glass card -->
+    <div class="glass-card" id="glass-card">
 
-      <div class="cert-header-label" id="cert-header-lbl">Certificate of Appreciation</div>
+      <!-- corner ornaments -->
+      <div class="cc tl"><svg viewBox="0 0 38 38" fill="none"><path d="M2 36V8C2 4.69 4.69 2 8 2H36" stroke="#c9a84c" stroke-width="1" opacity=".6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width=".5" opacity=".3"/></svg></div>
+      <div class="cc tr"><svg viewBox="0 0 38 38" fill="none"><path d="M2 36V8C2 4.69 4.69 2 8 2H36" stroke="#c9a84c" stroke-width="1" opacity=".6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width=".5" opacity=".3"/></svg></div>
+      <div class="cc bl"><svg viewBox="0 0 38 38" fill="none"><path d="M2 36V8C2 4.69 4.69 2 8 2H36" stroke="#c9a84c" stroke-width="1" opacity=".6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width=".5" opacity=".3"/></svg></div>
+      <div class="cc br"><svg viewBox="0 0 38 38" fill="none"><path d="M2 36V8C2 4.69 4.69 2 8 2H36" stroke="#c9a84c" stroke-width="1" opacity=".6"/><path d="M2 20V2H20" stroke="#c9a84c" stroke-width=".5" opacity=".3"/></svg></div>
+      <div class="card-frame"></div>
 
-      <div class="cert-divider">
-        <span></span><div class="cert-diamond"></div><span></span>
-      </div>
+      <!-- ① Happy Birthday — eye lands here first -->
+      <div class="hb-line" id="hb-line">Happy Birthday</div>
+      <div class="hb-text" id="hb-script">Happy Birthday</div>
 
-      <div class="cert-presented-to" id="cert-presented-lbl">Presented to</div>
-      <div class="cert-name" id="cert-name">—</div>
+      <div class="divider"><span></span><div class="diamond"></div><span></span></div>
 
-      <div class="cert-tagline" id="cert-tagline">
+      <!-- ② Portrait placeholder (shown when no photo) -->
+      <div class="portrait-hint" id="portrait-hint">Photo</div>
+
+      <!-- ③ Name -->
+      <div class="card-presented" id="card-presented">Presented to</div>
+      <div class="card-name" id="card-name">—</div>
+
+      <!-- tagline -->
+      <div class="card-tagline" id="card-tagline">
         For celebrating another beautiful year of life,<br/>and for being truly exceptional.
       </div>
 
-      <div class="cert-message-wrap">
-        <span class="cert-quote-mark">"</span>
-        <p class="cert-message" id="cert-message">Your message here…</p>
+      <!-- ④ Message -->
+      <div class="msg-wrap">
+        <span class="msg-quote">"</span>
+        <p class="msg-text" id="card-message">Your message here…</p>
       </div>
 
-      <div class="cert-divider" style="margin-top:1.5rem;">
-        <span></span><div class="cert-diamond"></div><span></span>
-      </div>
+      <div class="divider" style="margin-top:1.3rem"><span></span><div class="diamond"></div><span></span></div>
 
-      <div class="cert-signed-label" id="cert-signed-lbl">Presented by</div>
-      <div class="cert-signature" id="cert-signature">—</div>
+      <!-- Signature -->
+      <div class="signed-label" id="signed-label">Presented by</div>
+      <div class="signature" id="card-signature">—</div>
 
-      <!-- minimal seal: pure CSS rings, no text -->
-      <div class="cert-seal"></div>
+      <!-- Seal -->
+      <div class="seal"></div>
 
-      <div class="cert-watermark">Maison Éclat — Birthday Atelier</div>
-    </div>
-  </div>
+      <div class="watermark">Maison Éclat — Birthday Atelier</div>
+    </div><!-- /glass-card -->
+
+  </div><!-- /scene -->
 
   <div class="reveal-actions">
     <button class="btn-primary" id="btn-share">Share this Moment 💫</button>
     <button class="btn-secondary" id="btn-back">← Create Another</button>
   </div>
+
 </section>
 
-<!-- ═══ JAVASCRIPT ═══════════════════════════════════ -->
+
+<!-- ══════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════ -->
 <script>
 /* ── Language ───────────────────────────────────────── */
 const lang = navigator.language?.startsWith('fr') ? 'fr' : 'en';
 
 const T = {
   en: {
-    atelierLabel:    'Birthday Atelier',
-    titleEm:         'Birthday',
-    subtitle:        'Craft a timeless birthday experience',
-    lblPhoto:        'Celebrant\'s Photo',
-    uploadText:      'Upload a photo',
-    uploadDone:      'Photo selected ✓',
-    lblCelebrant:    "Celebrant's Name",
-    lblFrom:         'Your Name',
-    lblMessage:      'Your Message',
-    placeholderCel:  'e.g. Isabelle',
-    placeholderFrom: 'e.g. Julien',
-    placeholderMsg:  'Write something heartfelt…',
-    btnCreate:       'Create the Moment',
-    btnShare:        'Share this Moment 💫',
-    btnBack:         '← Create Another',
-    certHeader:      'Certificate of Appreciation',
-    certPresented:   'Presented to',
-    certTagline:     'For celebrating another beautiful year of life,\nand for being truly exceptional.',
-    certSigned:      'Presented by',
-    shareMsg:        'I created something truly special for you 💖',
-    toastOpening:    'Opening WhatsApp…',
-    errorFill:       'Please fill in all fields',
-    pageTitle:       'Maison Éclat — Birthday Atelier',
+    atelierLabel:  'Birthday Atelier',
+    titleEm:       'Birthday',
+    subtitle:      'Craft a timeless birthday experience',
+    lblPhoto:      "Celebrant's Photo",
+    uploadText:    'Upload a photo',
+    uploadDone:    'Photo selected ✓',
+    lblCelebrant:  "Celebrant's Name",
+    lblFrom:       'Your Name',
+    lblMessage:    'Your Message',
+    pCel:          'e.g. Isabelle',
+    pFrom:         'e.g. Julien',
+    pMsg:          'Write something heartfelt…',
+    btnCreate:     'Create the Moment',
+    btnShare:      'Share this Moment 💫',
+    btnBack:       '← Create Another',
+    hbLine:        'Happy Birthday',
+    hbScript:      'Happy Birthday',
+    presented:     'Presented to',
+    tagline:       'For celebrating another beautiful year of life,\nand for being truly exceptional.',
+    signedLabel:   'Presented by',
+    shareMsg:      'I created something truly special for you 💖',
+    toastOpen:     'Opening WhatsApp…',
+    errorFill:     'Please fill in all fields',
+    pageTitle:     'CARDTO',
+    photoHint:     'Photo',
   },
   fr: {
-    atelierLabel:    "Atelier d'Anniversaire",
-    titleEm:         'Anniversaire',
-    subtitle:        "Créez une expérience d'anniversaire inoubliable",
-    lblPhoto:        'Photo du Festoyé(e)',
-    uploadText:      'Télécharger une photo',
-    uploadDone:      'Photo sélectionnée ✓',
-    lblCelebrant:    'Nom du Festoyé(e)',
-    lblFrom:         'Votre Nom',
-    lblMessage:      'Votre Message',
-    placeholderCel:  'ex. Isabelle',
-    placeholderFrom: 'ex. Julien',
-    placeholderMsg:  'Écrivez quelque chose du fond du cœur…',
-    btnCreate:       'Créer le moment',
-    btnShare:        'Partager ce moment 💫',
-    btnBack:         '← Créer un autre',
-    certHeader:      "Certificat d'Appréciation",
-    certPresented:   'Présenté à',
-    certTagline:     "Pour célébrer une nouvelle et belle année de vie,\net pour être véritablement exceptionnel(le).",
-    certSigned:      'Présenté par',
-    shareMsg:        "J'ai créé quelque chose de vraiment spécial pour toi 💖",
-    toastOpening:    'Ouverture de WhatsApp…',
-    errorFill:       'Veuillez remplir tous les champs',
-    pageTitle:       "Maison Éclat — Atelier d'Anniversaire",
+    atelierLabel:  "Atelier d'Anniversaire",
+    titleEm:       'Anniversaire',
+    subtitle:      "Créez une expérience d'anniversaire inoubliable",
+    lblPhoto:      'Photo du Festoyé(e)',
+    uploadText:    'Télécharger une photo',
+    uploadDone:    'Photo sélectionnée ✓',
+    lblCelebrant:  'Nom du Festoyé(e)',
+    lblFrom:       'Votre Nom',
+    lblMessage:    'Votre Message',
+    pCel:          'ex. Isabelle',
+    pFrom:         'ex. Julien',
+    pMsg:          'Écrivez quelque chose du fond du cœur…',
+    btnCreate:     'Créer le moment',
+    btnShare:      'Partager ce moment 💫',
+    btnBack:       '← Créer un autre',
+    hbLine:        'Joyeux Anniversaire',
+    hbScript:      'Joyeux Anniversaire',
+    presented:     'Présenté à',
+    tagline:       "Pour célébrer une nouvelle et belle année de vie,\net pour être véritablement exceptionnel(le).",
+    signedLabel:   'Présenté par',
+    shareMsg:      "J'ai créé quelque chose de vraiment spécial pour toi 💖",
+    toastOpen:     'Ouverture de WhatsApp…',
+    errorFill:     'Veuillez remplir tous les champs',
+    pageTitle:     'CARDTO',
+    photoHint:     'Photo',
   }
 };
 const t = T[lang];
 
 /* ── Apply translations ─────────────────────────────── */
 document.title = t.pageTitle;
-document.getElementById('lbl-atelier').textContent        = t.atelierLabel;
-document.getElementById('title-em').textContent           = t.titleEm;
-document.getElementById('subtitle').textContent           = t.subtitle;
-document.getElementById('lbl-photo').childNodes[0].textContent = t.lblPhoto + ' ';
-document.getElementById('upload-text').textContent        = t.uploadText;
-document.getElementById('lbl-celebrant').textContent      = t.lblCelebrant;
-document.getElementById('lbl-from').textContent           = t.lblFrom;
-document.getElementById('lbl-message').textContent        = t.lblMessage;
-document.getElementById('input-celebrant').placeholder    = t.placeholderCel;
-document.getElementById('input-from').placeholder         = t.placeholderFrom;
-document.getElementById('input-message').placeholder      = t.placeholderMsg;
-document.getElementById('btn-create').textContent         = t.btnCreate;
-document.getElementById('btn-share').textContent          = t.btnShare;
-document.getElementById('btn-back').textContent           = t.btnBack;
-document.getElementById('cert-header-lbl').textContent    = t.certHeader;
-document.getElementById('cert-presented-lbl').textContent = t.certPresented;
-document.getElementById('cert-signed-lbl').textContent    = t.certSigned;
+const $ = id => document.getElementById(id);
+
+$('lbl-atelier').textContent        = t.atelierLabel;
+$('title-em').textContent           = t.titleEm;
+$('subtitle').textContent           = t.subtitle;
+$('lbl-photo').childNodes[0].textContent = t.lblPhoto + ' ';
+$('upload-text').textContent        = t.uploadText;
+$('lbl-celebrant').textContent      = t.lblCelebrant;
+$('lbl-from').textContent           = t.lblFrom;
+$('lbl-message').textContent        = t.lblMessage;
+$('input-celebrant').placeholder    = t.pCel;
+$('input-from').placeholder         = t.pFrom;
+$('input-message').placeholder      = t.pMsg;
+$('btn-create').textContent         = t.btnCreate;
+$('btn-share').textContent          = t.btnShare;
+$('btn-back').textContent           = t.btnBack;
+$('hb-line').textContent            = t.hbLine;
+$('hb-script').textContent          = t.hbScript;
+$('card-presented').textContent     = t.presented;
+$('signed-label').textContent       = t.signedLabel;
+$('portrait-hint').textContent      = t.photoHint;
 
 /* ── Pages ──────────────────────────────────────────── */
-const pageLanding = document.getElementById('page-landing');
-const pageReveal  = document.getElementById('page-reveal');
+const pageLanding = $('page-landing');
+const pageReveal  = $('page-reveal');
 
 function showPage(el) {
   document.querySelectorAll('.page').forEach(p => {
@@ -832,21 +824,21 @@ function showPage(el) {
   setTimeout(() => el.classList.add('active'), 80);
 }
 
-/* ── Loading screen ─────────────────────────────────── */
+/* ── Loading ─────────────────────────────────────────── */
 window.addEventListener('load', () => {
-  const ol = document.getElementById('loading-overlay');
+  const ol = $('loading');
   setTimeout(() => {
     ol.classList.add('hidden');
-    setTimeout(() => { ol.style.display = 'none'; showPage(pageLanding); }, 980);
+    setTimeout(() => { ol.style.display = 'none'; showPage(pageLanding); }, 950);
   }, 1500);
 });
 
 /* ── Particles ──────────────────────────────────────── */
 (function() {
-  const c = document.getElementById('particles');
+  const c = $('particles');
   for (let i = 0; i < 16; i++) {
     const p = document.createElement('div');
-    p.className = 'shimmer-particle';
+    p.className = 'sp';
     const s = 2 + Math.random() * 4;
     p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}vw;bottom:${-8+Math.random()*8}vh;animation-duration:${10+Math.random()*20}s;animation-delay:${Math.random()*14}s;`;
     c.appendChild(p);
@@ -856,90 +848,84 @@ window.addEventListener('load', () => {
 /* ── Photo upload ───────────────────────────────────── */
 let uploadedDataUrl = null;
 
-document.getElementById('input-photo').addEventListener('change', function() {
+$('input-photo').addEventListener('change', function() {
   const file = this.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = e => {
     uploadedDataUrl = e.target.result;
-    const preview = document.getElementById('upload-preview');
-    preview.src = uploadedDataUrl;
-    preview.classList.add('visible');
-    document.getElementById('upload-text').textContent = t.uploadDone;
+    const prev = $('upload-preview');
+    prev.src = uploadedDataUrl;
+    prev.classList.add('visible');
+    $('upload-text').textContent = t.uploadDone;
   };
   reader.readAsDataURL(file);
 });
 
 /* ── Form submit ────────────────────────────────────── */
-document.getElementById('form').addEventListener('submit', function(e) {
+$('form').addEventListener('submit', function(e) {
   e.preventDefault();
 
-  const celebrant = document.getElementById('input-celebrant').value.trim();
-  const from      = document.getElementById('input-from').value.trim();
-  const message   = document.getElementById('input-message').value.trim();
+  const celebrant = $('input-celebrant').value.trim();
+  const from      = $('input-from').value.trim();
+  const message   = $('input-message').value.trim();
 
-  if (!celebrant || !from || !message) {
-    showToast(t.errorFill);
-    return;
-  }
+  if (!celebrant || !from || !message) { showToast(t.errorFill); return; }
 
-  /* populate cert */
-  document.getElementById('cert-name').textContent      = celebrant;
-  document.getElementById('cert-signature').textContent = from;
-  document.getElementById('cert-message').textContent   = message;
+  /* card text */
+  $('card-name').textContent      = celebrant;
+  $('card-signature').textContent = from;
+  $('card-message').textContent   = message;
+  $('card-tagline').innerHTML     = t.tagline.split('\n').join('<br/>');
 
-  const lines = t.certTagline.split('\n');
-  document.getElementById('cert-tagline').innerHTML = lines.join('<br/>');
+  /* portrait */
+  const portWrap = $('portrait-wrap');
+  const portImg  = $('portrait-img');
+  const portGlow = $('portrait-glow');
+  const hint     = $('portrait-hint');
 
-  /* apply photo to cert background */
-  const bgLayer = document.getElementById('cert-bg-layer');
   if (uploadedDataUrl) {
-    bgLayer.style.backgroundImage = `url(${uploadedDataUrl})`;
-    bgLayer.classList.add('visible');
+    portImg.src = uploadedDataUrl;
+    portWrap.classList.add('visible');
+    portGlow.classList.add('visible');
+    hint.classList.add('hidden');
+
+    /* on desktop: portrait floats beside/behind card — handled by absolute positioning */
+    /* on mobile: stacked above card via flex-direction:column in CSS */
   } else {
-    bgLayer.classList.remove('visible');
-    bgLayer.style.backgroundImage = '';
+    portWrap.classList.remove('visible');
+    portGlow.classList.remove('visible');
+    hint.classList.remove('hidden');
   }
 
   showPage(pageReveal);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-/* ── Back button ────────────────────────────────────── */
-document.getElementById('btn-back').addEventListener('click', () => {
+/* ── Back ────────────────────────────────────────────── */
+$('btn-back').addEventListener('click', () => {
   showPage(pageLanding);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 /* ── Share ──────────────────────────────────────────── */
-document.getElementById('btn-share').addEventListener('click', async () => {
-  showToast(t.toastOpening);
-
+$('btn-share').addEventListener('click', async () => {
+  showToast(t.toastOpen);
   try {
-    const card = document.getElementById('cert-card');
+    const card   = $('glass-card');
     const canvas = await html2canvas(card, {
       backgroundColor: '#0d0900',
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      allowTaint: true,
+      scale: 2, useCORS: true, allowTaint: true, logging: false,
     });
-
-    canvas.toBlob(async (blob) => {
+    canvas.toBlob(async blob => {
       const file = new File([blob], 'maison-eclat-birthday.png', { type: 'image/png' });
-
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ title: 'Maison Éclat', text: t.shareMsg, files: [file] });
-          return;
-        } catch(_) {}
+        try { await navigator.share({ title: 'Maison Éclat', text: t.shareMsg, files: [file] }); return; }
+        catch(_) {}
       }
-
-      /* WhatsApp fallback */
       window.open(`https://wa.me/?text=${encodeURIComponent(t.shareMsg + '\n\n' + window.location.href)}`, '_blank');
     }, 'image/png');
-
-  } catch(err) {
+  } catch(_) {
     window.open(`https://wa.me/?text=${encodeURIComponent(t.shareMsg)}`, '_blank');
   }
 });
@@ -947,25 +933,22 @@ document.getElementById('btn-share').addEventListener('click', async () => {
 /* ── Toast ──────────────────────────────────────────── */
 let toastTimer;
 function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
+  const el = $('toast');
+  el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
 
-/* ── Card tilt (desktop only) ───────────────────────── */
-const certOuter = document.querySelector('.cert-outer');
-document.addEventListener('mousemove', (e) => {
+/* ── Card tilt — desktop ────────────────────────────── */
+const glassCard = $('glass-card');
+document.addEventListener('mousemove', e => {
   if (window.innerWidth < 600 || !pageReveal.classList.contains('active')) return;
-  const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
-  const dx = (e.clientX - cx) / cx;
-  const dy = (e.clientY - cy) / cy;
-  certOuter.style.transform = `perspective(1000px) rotateX(${-dy * 3.5}deg) rotateY(${dx * 3.5}deg)`;
+  const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  const dx = (e.clientX - cx) / cx, dy = (e.clientY - cy) / cy;
+  glassCard.style.transform = `perspective(1000px) rotateX(${-dy*3}deg) rotateY(${dx*3}deg)`;
 });
 document.addEventListener('mouseleave', () => {
-  certOuter.style.transform = 'perspective(1000px) rotateX(1.2deg) rotateY(0deg)';
+  glassCard.style.transform = 'perspective(1000px) rotateX(1deg) rotateY(0deg)';
 });
 </script>
 </body>
